@@ -1,95 +1,126 @@
-
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
-
 import 'UserModel.dart';
 
-class UploaduserData extends StatefulWidget {
-  const UploaduserData({super.key});
+class UploadUserData extends StatefulWidget {
+  const UploadUserData({Key? key, required Null Function() onDataUploaded}) : super(key: key);
 
   @override
-  State<UploaduserData> createState() => _UploaduserDataState();
+  State<UploadUserData> createState() => _UploadUserDataState();
 }
 
-class _UploaduserDataState extends State<UploaduserData> {
+class _UploadUserDataState extends State<UploadUserData> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  bool isSubmitting = false;
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('User Form'),
-              SizedBox(height: 16.0,),
-              CupertinoTextField(
-                controller: _nameController,
-                placeholder: 'Name',
-                padding: EdgeInsets.all(16.0),
-                keyboardType: TextInputType.name,
-              ),
-              SizedBox(height: 16.0),
-              CupertinoTextField(
-                controller: _genderController,
-                placeholder: 'Gender',
-                padding: EdgeInsets.all(16.0),
-                keyboardType: TextInputType.text,
-              ),
-              SizedBox(height: 16.0),
-              CupertinoTextField(
-                controller: _emailController,
-                placeholder: 'Email',
-                padding: EdgeInsets.all(16.0),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              SizedBox(height: 24.0),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                child: CupertinoButton(
-                  onPressed: () {
-                    // Handle form submission
-                    String name = _nameController.text;
-                    String gender = _genderController.text;
-                    String email = _emailController.text;
-                    print('Name: $name, Email: $email, Age: $gender');
-                    uploadUserData();
-                  },
-                  child: Text('Submit'),
-                  color: CupertinoColors.activeBlue,
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('User Form'),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue, Colors.indigo], // Customize your gradient colors here
+          ),
+        ),
+        child: Card(
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          margin: EdgeInsets.all(16.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 16.0),
+                TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Name',
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: 16.0),
+                TextField(
+                  controller: _genderController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Gender',
+                  ),
+                ),
+                SizedBox(height: 16.0),
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Email',
+                  ),
+                ),
+                SizedBox(height: 24.0),
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isSubmitting ? null : _handleSubmit,
+                    child: isSubmitting
+                        ? CircularProgressIndicator(
+                      color: Colors.white,
+                    )
+                        : Text('Submit'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  void clearTextFields() {
-    _nameController.text = '';
-    _genderController.text = '';
-    _emailController.text = '';
-  }
+  void _handleSubmit() async {
+    setState(() {
+      isSubmitting = true;
+    });
 
-  Future<void> uploadUserData() async {
+    String name = _nameController.text;
+    String gender = _genderController.text;
+    String email = _emailController.text;
+
+    // Validate the form data here if needed
+
     UserData userData = UserData(
-      name: _nameController.text,
-      gender: _genderController.text,
-      email: _emailController.text,
+      name: name,
+      gender: gender,
+      email: email,
       createdAt: Timestamp.now(), // Current timestamp
     );
+
     final collectionRef = FirebaseFirestore.instance.collection('users');
+
     try {
       await collectionRef.add(userData.toMap());
       print('User data uploaded successfully');
-      clearTextFields();
+      _clearTextFields();
     } catch (e) {
       print('Error uploading user data: $e');
+    } finally {
+      setState(() {
+        isSubmitting = false;
+      });
     }
+  }
+
+  void _clearTextFields() {
+    _nameController.clear();
+    _genderController.clear();
+    _emailController.clear();
   }
 }

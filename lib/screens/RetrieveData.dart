@@ -14,6 +14,7 @@ class RetrieveUserData extends StatefulWidget {
 class _RetrieveUserDataState extends State<RetrieveUserData> {
   late Stream<QuerySnapshot> userDataStream;
 
+
   @override
   void initState() {
     super.initState();
@@ -24,20 +25,21 @@ class _RetrieveUserDataState extends State<RetrieveUserData> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('User Data'),
+      ),
         body: CupertinoPageScaffold(
-          navigationBar: CupertinoNavigationBar(
-            leading: Container(
-                padding:const EdgeInsets.symmetric(vertical: 10),
-                child: const Text('User Data')),
-          ),
           child: SafeArea(
             child: StreamBuilder<QuerySnapshot>(
               stream: userDataStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CupertinoActivityIndicator();
+                  return const Center(child: CupertinoActivityIndicator(
+                    color: CupertinoColors.black,
+                    animating: true,
+                    radius: 35.0,
+                  ));
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(child: Text('No user data available.'));
@@ -52,53 +54,71 @@ class _RetrieveUserDataState extends State<RetrieveUserData> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget buildUserDataList(List<Object?> userDataList, List<QueryDocumentSnapshot> documentSnapshots) {
-    return ListView.builder(
-      itemCount: userDataList.length,
-      itemBuilder: (context, index) {
-        var userData = userDataList[index] as Map<String, dynamic>?;
-        var documentSnapshot = documentSnapshots[index];
+    return Container(
+      padding: const EdgeInsets.all(5),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.blue, Colors.indigo], // Customize your gradient colors here
+        ),
+      ),
+      child: Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: ListView.builder(
+            itemCount: userDataList.length,
+            itemBuilder: (context, index) {
+              var userData = userDataList[index] as Map<String, dynamic>?;
+              var documentSnapshot = documentSnapshots[index];
 
-        if (userData == null) {
-          return const SizedBox(); // Handle the case where userData is null
-        }
+              if (userData == null) {
+                return const SizedBox(); // Handle the case where userData is null
+              }
 
-        final name = userData['name'] as String? ?? '';
-        final gender = userData['gender'] as String ?? '';
-        final email = userData['email'] as String? ?? '';
+              final name = userData['name'] as String? ?? '';
+              final gender = userData['gender'] as String ?? '';
+              final email = userData['email'] as String? ?? '';
 
-        return InkWell(
-          onLongPress: () {
-            _showOptionsDialog(context, index, documentSnapshot);
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Card(
-              elevation: 5,
-              child: ListTile(
-                leading: Image.asset('assets/logo.png',),
-                title: Text(name),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(email),
-                    Text(gender),
-                  ],
-                ),
-                trailing: CupertinoButton(
-                  onPressed: (){
+              return InkWell(
+                onLongPress: () {
                   _showOptionsDialog(context, index, documentSnapshot);
-                  },
-                  child: Icon(Icons.more_vert_outlined, color: Colors.grey,),
-              ),
-            ),
-          ),),
-        );
-      },
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Card(
+                    elevation: 5,
+                    child: ListTile(
+                      leading: Image.asset('assets/logo.png',),
+                      title: Text(name),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(email),
+                          Text(gender),
+                        ],
+                      ),
+                      trailing: CupertinoButton(
+                        onPressed: (){
+                        _showOptionsDialog(context, index, documentSnapshot);
+                        },
+                        child: Icon(Icons.more_vert_outlined, color: Colors.grey,),
+                    ),
+                  ),
+                ),),
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 
